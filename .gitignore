@@ -1,0 +1,14 @@
+#Spark Files
+derby.log
+metastore_db/*
+pyspark.sh
+
+#Report
+document/*.aux
+document/*.log
+document/*.synctex.gz
+document/*.toc
+document/*.out
+
+#Mac files
+.DS_Store

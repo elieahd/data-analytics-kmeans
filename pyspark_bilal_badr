@@ -1,0 +1,26 @@
+from pyspark.mllib.random import RandomRDDs
+from math import floor
+
+dataFromText = sc.textFile("data/iris_clustering.dat")
+
+def loadData(row):
+    sepalLength, sepalWidth, petalLength, petalWidth, className = row.split(',');
+    return ([float(sepalLength), float(sepalWidth), float(petalLength), float(petalWidth), className]);
+
+data = dataFromText.map(lambda x: loadData(x))
+data = data.zipWithIndex()
+
+def initCentroid(minVal, maxVal, numOfCentroids):
+    centroidIndeces = RandomRDDs.uniformRDD(sc, numOfCentroids).map(lambda i: int(floor(minVal+(maxVal-minVal)*i))).collect()
+    centroids = []
+    for centroidIndex in centroidIndeces:
+        element = data.filter(lambda (value, index): index==centroidIndex).first()[0][:4:]
+        centroids.append(element)
+    return sc.parallelize(centroids).zipWithIndex()
+
+a = 0
+b = data.count()-1
+k = 4
+
+centroids = initCentroid(a, b, k)
+centroids.collect()
