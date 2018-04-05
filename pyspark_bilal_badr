@@ -54,3 +54,21 @@ def calculateDistance(centroid, dataPoint):
     return (dataPoint[1], (centroid[1], dist))
 
 res = test.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
+
+def minDist(row):
+    index = row[0]
+    myList = row[1]
+    minValue = -1
+    minPoint = None
+    minCentroidIndex = -1
+    for element in myList:
+        centroidIndex = element[0]
+        distance = element[1]
+        if (minValue == -1) or (distance < minValue):
+            minValue = distance
+            minCentroidIndex = centroidIndex
+            minPoint = (minCentroidIndex, minValue)
+    return (index, minPoint)
+
+finalResult = res.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
+finalResult.collect()
