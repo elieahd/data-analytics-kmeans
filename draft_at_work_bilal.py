@@ -174,3 +174,75 @@ newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): recalculateCe
 if hasConverged(centroids.collect(), newCentroids.collect()):
     break;
 centroids = newCentroids
+
+# ------------------------- New -----------------------------
+
+from pyspark.mllib.random import RandomRDDs
+import numpy
+
+# path = "data/iris_clustering.dat"
+path = "data/iris_small.dat"
+numClusters = 4
+
+# methods
+def customSplit(row):
+    values = row[0]
+    index = row[1]
+    sepalLength, sepalWidth, petalLength, petalWidth, cluster = values.split(',')
+    return (index, [float(sepalLength), float(sepalWidth), float(petalLength), float(petalWidth), cluster])
+
+def loadData(path):
+    dataFromText = sc.textFile(path)
+    dataZipped = dataFromText.zipWithIndex()
+    return dataZipped.map(lambda x: customSplit(x))
+
+def initCentroids(data, numClusters):
+    sample = sc.parallelize(data.takeSample(False, numClusters))
+    centroids = sample.map(lambda point : point[1][:-1]) 
+    return centroids.zipWithIndex().map(lambda point : (point[1], point[0]))
+
+def calculateDistance(centroid, dataPoint):
+    list1 = centroid[1]
+    list2 = dataPoint[1][:4:]
+    array1 = numpy.array(list1)
+    array2 = numpy.array(list2)
+    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    return (dataPoint[0], (centroid[0], dist))
+
+def hasConverged(centroids, newCentroids):
+    for i in range(len(centroids)):
+        oldElement = centroids[i][1];
+        newElement = newCentroids[i][1];
+        if not numpy.array_equal(oldElement, newElement):
+            return False
+    return True
+
+
+def recalculateCentroid(iCentroid, clusterItems):
+    allLists = []
+    for element in clusterItems:
+        #element = ([5.4, 3.7, 1.5, 0.2, u'Iris-setosa'], 0.6999999999999994)
+        allLists.append(element[0][:4:])
+    averageArray = list(numpy.average(allLists, axis = 0))
+    newCentroid = (iCentroid, averageArray)
+    return newCentroid
+
+def hasConverged(centroids, newCentroids):
+    for i in range(len(centroids)):
+        oldElement = centroids[i][1];
+        newElement = newCentroids[i][1];
+        if not numpy.array_equal(oldElement, newElement):
+            return False
+    return True
+
+data = loadData(path)
+centroids = initCentroids(data, numClusters)
+res = cartesianData.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
+finalResult = res.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
+dataByCluster = finalResult.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
+dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
+newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): recalculateCentroid(iCentroid, clusterItems))
+#Loop code
+if hasConverged(centroids.collect(), newCentroids.collect()):
+    break;
+centroids = newCentroids
