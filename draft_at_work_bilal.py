@@ -146,8 +146,8 @@ def recalculateCentroid(iCentroid, clusterItems):
 
 
 def hasConverged(centroids, newCentroids):
-    for i = 0 in range(len(centroids)):
-        oldElement = centroid[i][1];
+    for i in range(len(centroids)):
+        oldElement = centroids[i][1];
         newElement = newCentroids[i][1];
         if not numpy.array_equal(oldElement, newElement):
             return False
