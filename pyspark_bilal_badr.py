@@ -1,43 +1,40 @@
 from pyspark.mllib.random import RandomRDDs
-from math import floor
 import numpy
+import datetime
 
-# path = "data/iris_clustering.dat"
-path = "data/iris_small.dat"
+# path = "data/iris_small.dat"
+path = "data/iris_clustering.dat"
+numClusters = 4
 
-dataFromText = sc.textFile(path)
+# methods
+def customSplit(row):
+    values = row[0]
+    index = row[1]
+    sepalLength, sepalWidth, petalLength, petalWidth, cluster = values.split(',')
+    return (index, [float(sepalLength), float(sepalWidth), float(petalLength), float(petalWidth), cluster])
 
-def loadData(row):
-    sepalLength, sepalWidth, petalLength, petalWidth, className = row.split(',');
-    return ([float(sepalLength), float(sepalWidth), float(petalLength), float(petalWidth), className]);
+def loadData(path):
+    dataFromText = sc.textFile(path)
+    dataZipped = dataFromText.zipWithIndex()
+    return dataZipped.map(lambda x: customSplit(x))
 
-def initCentroid(minVal, maxVal, numOfCentroids):
-    # centroidIndeces = RandomRDDs.uniformRDD(sc, numOfCentroids).map(lambda i: int(floor(minVal+(maxVal-minVal)*i))).collect()
-    # centroids = data.takeSample(False, 4);
-    # formattedCentroids = []
-    # for centroid in centroids:
-    #     element = centroid[:-1]
-    #     formattedCentroids.append(element)
-    # return sc.parallelize(formattedCentroids).zipWithIndex()
-    return sc.parallelize([([5.7, 3.8, 1.7, 0.3], 0), ([6.2, 2.2, 4.5, 1.5], 1), ([6.7, 2.5, 5.8, 1.8], 2), ([6.3, 2.5, 5.0, 1.9], 3)]);
-
-def assignToCluster(centroids, data):
-    return centroids.cartesian(data)
+#Random is not efficient!
+def initCentroids(data, numClusters):
+    sample = sc.parallelize(data.takeSample(False, numClusters))
+    centroids = sample.map(lambda point : point[1][:-1]) 
+    return centroids.zipWithIndex().map(lambda point : (point[1], point[0]))
 
 def calculateDistance(centroid, dataPoint):
-    list1 = centroid[0][0]
-    list2 = dataPoint[0][:4:]
-    print("calculateDistance(" + str(list1) + ", " + str(list2))
+    list1 = centroid[1]
+    list2 = dataPoint[1][:-1]
     array1 = numpy.array(list1)
     array2 = numpy.array(list2)
     dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
-    print(str(dist))
-    return (dataPoint[1], (centroid[1], dist))
+    return (dataPoint[0], (centroid[0], dist))
 
 def minDist(row):
     index = row[0]
     myList = row[1]
-    print("MinDist(" + str(index) + "," + str(myList) + ")")
     minValue = -1
     minPoint = None
     minCentroidIndex = -1
@@ -50,53 +47,47 @@ def minDist(row):
             minPoint = (minCentroidIndex, minValue)
     return (index, minPoint)
 
-data = dataFromText.map(lambda x: loadData(x))
+def recalculateCentroid(iCentroid, clusterItems):
+    allLists = []
+    for element in clusterItems:
+        #element = ([5.4, 3.7, 1.5, 0.2, u'Iris-setosa'], 0.6999999999999994)
+        allLists.append(element[0][:-1])
+    averageArray = list(numpy.average(allLists, axis = 0))
+    newCentroid = (iCentroid, averageArray)
+    return newCentroid
 
-a = 0
-b = data.count()-1
-k = 4
+def hasConverged(centroids, newCentroids):
+    for i in range(len(centroids)):
+        oldElement = centroids[i][1];
+        newElement = newCentroids[i][1];
+        if not numpy.array_equal(oldElement, newElement):
+            return False
+    return True
 
-centroids = initCentroid(a, b, k)
-#centroids.collect()
+data = loadData(path)
+centroids = initCentroids(data, numClusters)
+centroids.collect()
 
-data = data.zipWithIndex()
+iterations = 0
+startTime = datetime.datetime.now()
+while True:
+    iterations += 1
+    cartesianData = centroids.cartesian(data)
+    res = cartesianData.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
+    finalResult = res.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
+    dataByCluster = finalResult.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
+    dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
+    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): recalculateCentroid(iCentroid, clusterItems))
+    centroidsList = centroids.collect()
+    newCentroidsList = newCentroids.collect()
+    if hasConverged(centroidsList, newCentroidsList):
+        break;
+    # To break the lineage and make the algorithm more efficient,
+    # we tell spark to create a new RDD from the newCentroidsList
+    # insteak of using the old one.
+    centroids = sc.parallelize(newCentroidsList)
 
-# def findNearestCentroid(arg):
-#     pass
-
-# while True:
-cartesianData = centroids.cartesian(data)
-res = cartesianData.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
-
-finalResult = res.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
-finalResult.collect()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# rdd = sc.parallelize([1, 2])
-# rdd.cartesian(rdd).collect()
-
-# (([6.8, 3.0, 5.5, 2.1], 0), ([5.1, 3.5, 1.4, 0.2, u'Iris-setosa'], 0))
-# test.first()[1][0][:4:]
-# test.first()[0][0]
-# numpy.linalg.norm(numpy.array(x) - numpy.array(y))
-# numpy.sqrt(numpy.sum((numpy.array(x) - numpy.array(y))**2))
-# ========================================================================
-# result with distance format
-# (((cindex, centroid), (dataIndex, dataPoint)),distance)
-# GroupBy/GroupByKey
+endTime = datetime.datetime.now()
+centroids.collect()
+print("Number of iterations until convergence: " + str(iterations))
+print("Elapsed time: " + str(endTime - startTime))
