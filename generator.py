@@ -13,12 +13,25 @@ MAX_MEAN_VALUE = 100
 STEPS = 0.1
 
 # methods
-def generate_point_value(normal_value, mean_value, std):
-    return mean_value + normal_value * std
+def point_values(means_value, normal_value, std, cluster, dimension):
+    values = ""
+    for d in range(dimension):
+        value = means_value[d] + normal_value[d] * std
+        if not values:
+            values = str(value)
+        else:
+            values = values + "," + str(value)
+    return (values + "," + str(cluster))
+
+def write_into_csv(file_name, rdd): 
+    with open(file_name,'wb') as file:
+        for row in rdd.collect():
+            file.write(row)
+            file.write('\n')
 
 # main code
 if len(sys.argv) != 6:
-    print("5 arguments are needed :")
+    print("5 additional arguments are needed :")
     print(" * file name to be generated e.g. output")
     print(" * number of points to be generated e.g. 9")
     print(" * number of clusters e.g. 3")
@@ -28,12 +41,13 @@ if len(sys.argv) != 6:
     exit(0)
 
 # inputs
-file_name = sys.argv[1] + '.csv' # file name to be generated
+file_name = sys.argv[1] + '.csv'  # file name to be generated
 points = int(sys.argv[2]) # number of points to be generated
 count_cluster = int(sys.argv[3]) # number of clusters
 dimension = int(sys.argv[4]) # dimension of the data
 std = int(sys.argv[5]) # standard deviation
-noise_points = points * 2 # number of noise points to be generated
+noise_points = points * 2 # number of noise points to be generated / double the number of points
+file_name_noise = sys.argv[1] + '-noise.csv' # file name for noise points to be generated
 
 sc = SparkContext("local", "generator") # spark context
 
@@ -50,18 +64,14 @@ random_values_vector = RandomRDDs.normalVectorRDD(sc, numRows = points, numCols 
 cluster_normal_values_vector = random_values_vector.map(lambda point : (random.randint(0, count_cluster - 1), point.tolist()))
 
 # generate a value depending of the mean of the cluster, standard deviation and the normal value 
-points_value_vector = cluster_normal_values_vector.join(means_cluster).map(
-    lambda (cluster, (normal_value, means_value)): 
-    (
-        generate_point_value(normal_value[0], means_value[0], std),
-        generate_point_value(normal_value[1], means_value[1], std),
-        cluster
-    )
-)
+points_value_vector = cluster_normal_values_vector.join(means_cluster).map(lambda (cluster, (normal_value, means_value)): (point_values(means_value, normal_value, std, cluster, dimension)))
 
+# generate random points that represent noise points
 noise_points_vector = sc.parallelize(range(0, noise_points)).map(lambda x : random.sample(numpy.arange(MIN_MEAN_VALUE, MAX_MEAN_VALUE, STEPS), dimension))
+noise_points_vector = noise_points_vector.map(lambda row : str(row).replace("[", "").replace("]",""))
 
-points_value_vector.collect()
+# saving points generated into a file
+write_into_csv(file_name, points_value_vector);
 
-# saving into file
-points_value_vector.saveAsTextFile(file_name)
+# saving noise points generated into a file
+write_into_csv(file_name_noise, noise_points_vector);

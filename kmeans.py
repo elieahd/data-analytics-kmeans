@@ -1,10 +1,11 @@
-from pyspark.mllib.random import RandomRDDs
+# spark-submit kmeans.py data/iris_small.dat 4 10
+# imports
 import numpy
 import datetime
+import sys
 
-# path = "data/iris_clustering.dat"
-path = "data/iris_small.dat"
-numClusters = 4
+from pyspark.mllib.random import RandomRDDs
+from pyspark import SparkContext
 
 # methods
 def customSplit(row):
@@ -52,7 +53,7 @@ def minDist(row):
 def recalculateCentroid(iCentroid, clusterItems):
     allLists = []
     for element in clusterItems:
-        #element = ([5.4, 3.7, 1.5, 0.2, u'Iris-setosa'], 0.6999999999999994)
+        # element = ([5.4, 3.7, 1.5, 0.2, u'Iris-setosa'], 0.6999999999999994)
         allLists.append(element[0][:-1])
     averageArray = list(numpy.average(allLists, axis = 0))
     newCentroid = (iCentroid, averageArray)
@@ -66,19 +67,44 @@ def hasConverged(centroids, newCentroids):
             return False
     return True
 
+def custom(clusterId, data):
+    result = [];
+    for element in data:
+        r = (str(clusterId) + "," + str(element[0]).replace("[", "").replace("]","") + "," + str(element[1]))
+        result.append(r)
+    return result;
+
+
+if len(sys.argv) != 4:
+    print("3 additional arguments are needed :")
+    print(" * name of the file containing the points e.g. data/iris_small.dat")
+    print(" * number of clusters e.g. 4")
+    print(" * max number of iterations e.g. 10\n")
+    print("Try executing the following command : spark-submit kmeans.py data/iris_small.dat 4 10")
+    exit(0)
+
+# inputs
+path = sys.argv[1]  # file name of the points
+numClusters = int(sys.argv[2]) # number of clusters
+maxIterations = int(sys.argv[3]) # maximum number of iterations
+
+sc = SparkContext("local", "generator") # spark context
+
 data = loadData(path)
 centroids = initCentroids(data, numClusters)
 centroids.collect()
 
 iterations = 0
 startTime = datetime.datetime.now()
-while True:
+while iterations != maxIterations:
     iterations += 1
     cartesianData = centroids.cartesian(data)
     res = cartesianData.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
     finalResult = res.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
     dataByCluster = finalResult.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
     dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
+    # print(dataByCluster.collect())
+    # print()
     newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): recalculateCentroid(iCentroid, clusterItems))
     centroidsList = centroids.collect()
     newCentroidsList = newCentroids.collect()
@@ -91,5 +117,13 @@ while True:
 
 endTime = datetime.datetime.now()
 centroids.collect()
-print("Number of iterations until convergence: " + str(iterations))
 print("Elapsed time: " + str(endTime - startTime))
+print("Number of iterations: " + str(iterations))
+print("Final distance: " + str(iterations))
+# print(dataByCluster.collect())
+
+plotData = dataByCluster.map(lambda (clusterId, data) : custom(clusterId, data)).flatMap(lambda x: x)
+with open('testing.csv','wb') as file:
+    for row in plotData.collect():
+        file.write(row)
+        file.write('\n')
