@@ -84,7 +84,7 @@ while True:
         break;
     # To break the lineage and make the algorithm more efficient,
     # we tell spark to create a new RDD from the newCentroidsList
-    # insteak of using the old one.
+    # instead of using the old one.
     centroids = sc.parallelize(newCentroidsList)
 
 endTime = datetime.datetime.now()
