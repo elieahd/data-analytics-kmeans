@@ -126,9 +126,8 @@ while iterations != maxIterations:
     # To break the lineage and make the algorithm more efficient,
     # we tell spark to create a new RDD from the newCentroidsList
     # instead of using the old one.
-    # centroids = sc.parallelize(newCentroids.collect())
-    centroids = newCentroids
-
+    centroids = sc.parallelize(newCentroids.collect())
+    
 endTime = datetime.datetime.now()
 
 centroids.collect()
