@@ -1,4 +1,5 @@
 # spark-submit kmeans.py data/iris_small.dat 4 10
+
 # imports
 import numpy
 import datetime
@@ -89,23 +90,17 @@ def plot2DResult(data, centroids):
     fileName = 'iter#' +str(iterations) + '.png'  
     fig.savefig(fileName) 
 
-
-def test1():    
-    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
-    ax.scatter([0.3, 1.2, 2.5, 3.8], [40, 30, 20, 10], color='darkgreen', marker='^')
-    fig.savefig('bla.png')  
-
-def test2():    
-    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
-    ax.scatter([0.3, 1.2, 2.5, 3.8], [10, 20, 30, 40], color='darkgreen', marker='^')
-    fig.savefig('bla-bla.png') 
-
-    #plt.close(fig)
-
 def computeCentroids(dataMinDistance, oldCentroids):
     dataByCluster = dataMinDistance.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
     dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
-    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems)) 
+    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems))
+    print('dataByCluster')
+    print(dataByCluster.collect())
+    print('oldCentroids')
+    print(oldCentroids.collect())
+    print('newCentroids')
+    print(newCentroids.collect())
+    
     plot2DResult(dataByCluster.collect(), oldCentroids.collect())   
     return newCentroids
 
@@ -171,9 +166,3 @@ centroids.collect()
 print("Elapsed time: " + str(endTime - startTime))
 print("Number of iterations: " + str(iterations))
 print("Final distance: " + str(intraClusterDistances))
-
-# plotData = dataByCluster.map(lambda (clusterId, data) : custom(clusterId, data)).flatMap(lambda x: x)
-# with open('result.csv','wb') as file:
-  #  for row in plotData.collect():
-    #    file.write(row)
-     #   file.write('\n')

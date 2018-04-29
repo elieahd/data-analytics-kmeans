@@ -13,6 +13,17 @@ MAX_MEAN_VALUE = 100
 STEPS = 0.1
 
 # methods
+def noise_values(values):
+    result = ""
+    cluster = random.randint(0, count_cluster - 1)
+    cluster = count_cluster
+    for v in values:
+        if not result:
+            result = str(v)
+        else:
+            result = result + "," + str(v)
+    return (result + "," + str(cluster))
+
 def point_values(means_value, normal_value, std, cluster, dimension):
     values = ""
     for d in range(dimension):
@@ -48,6 +59,7 @@ count_cluster = int(sys.argv[3]) # number of clusters
 dimension = int(sys.argv[4]) # dimension of the data
 std = int(sys.argv[5]) # standard deviation
 noise_points = points * 2 # number of noise points to be generated / double the number of points
+file_name_noise = sys.argv[1] + '-noise.csv' # file name for noise points to be generated
 
 sc = SparkContext("local", "generator") # spark context
 
@@ -66,11 +78,21 @@ cluster_normal_values_vector = random_values_vector.map(lambda point : (random.r
 # generate a value depending of the mean of the cluster, standard deviation and the normal value 
 points_value_vector = cluster_normal_values_vector.join(means_cluster).map(lambda (cluster, (normal_value, means_value)): (point_values(means_value, normal_value, std, cluster, dimension)))
 
-# printing result in console
-# print(points_value_vector.collect())
+print(points_value_vector.collect())
+
+# generate random points that represent noise points
+noise_points_vector = sc.parallelize(range(0, noise_points)).map(lambda x : random.sample(numpy.arange(MIN_MEAN_VALUE, MAX_MEAN_VALUE, STEPS), dimension)).map(lambda v: noise_values(v))
+        
+# noise_points_vector = noise_points_vector.map(lambda row : str(row).replace("[", "").replace("]",""))
+print(noise_points_vector.collect())
+
+data = points_value_vector.union(noise_points_vector)
+
+print(data.collect())
+
 
 # writing points value in a 1 csv file
-write_into_csv(file_name, points_value_vector);
+# write_into_csv(file_name, points_value_vector);
 
-# saving rdd using saveAsTextFile  
-# points_value_vector.saveAsTextFile(file_name)
+# saving noise points generated into a file
+# write_into_csv(file_name_noise, noise_points_vector);

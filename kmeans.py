@@ -7,7 +7,6 @@ import sys
 
 from pyspark.mllib.random import RandomRDDs
 from pyspark import SparkContext
-import matplotlib.pyplot as plt
 
 # methods
 def customSplit(row):
@@ -24,7 +23,7 @@ def loadData(path):
     dataZipped = data.zipWithIndex()
     return dataZipped.map(lambda x: customSplit(x))
 
-# random is not efficient check file kmeansplusplus.py
+# random is not efficient check file kmeansPlusPlus.py
 def initCentroids(data, numClusters):
     sample = sc.parallelize(data.takeSample(False, numClusters))
     centroids = sample.map(lambda point : point[1][:-1])
@@ -89,7 +88,8 @@ def computeIntraClusterDistance(data):
     return result
 
 if len(sys.argv) != 4:
-    print("3 additional arguments are needed :")
+    print("4 arguments are needed :")
+    print(" * name of the file containing the code kmeans.py")
     print(" * name of the file containing the points e.g. data/iris_small.dat")
     print(" * number of clusters e.g. 4")
     print(" * max number of iterations e.g. 10\n")
@@ -127,3 +127,4 @@ endTime = datetime.datetime.now()
 print("Elapsed time: " + str(endTime - startTime))
 print("Number of iterations: " + str(iterations))
 print("Final distance: " + str(intraClusterDistances))
+
