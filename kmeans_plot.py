@@ -47,7 +47,7 @@ def calculateDistance(centroid, dataPoint):
     list2 = dataPoint[1][:-1]
     array1 = numpy.array(list1)
     array2 = numpy.array(list2)
-    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    dist = numpy.linalg.norm(array1-array2)
     return (dataPoint[0], (centroid[0], dist))
 
 def minDist(row):
@@ -85,22 +85,16 @@ def plot2DResult(data, centroids):
         values = element[1]
         centroidsX = [values[0]]
         centroidsY = [values[1]]
-        ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o')
-        
-    fileName = 'iter#' +str(iterations) + '.png'  
-    fig.savefig(fileName) 
+        ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o', linewidths=0.5, edgecolor='black')
+    
+    fileName = 'iter#' +str(iterations)
+    ax.set_title(fileName)
+    fig.savefig(fileName +  '.png') 
 
 def computeCentroids(dataMinDistance, oldCentroids):
     dataByCluster = dataMinDistance.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
     dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
     newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems))
-    print('dataByCluster')
-    print(dataByCluster.collect())
-    print('oldCentroids')
-    print(oldCentroids.collect())
-    print('newCentroids')
-    print(newCentroids.collect())
-    
     plot2DResult(dataByCluster.collect(), oldCentroids.collect())   
     return newCentroids
 

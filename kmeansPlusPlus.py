@@ -38,7 +38,7 @@ def initCentroidsKpp(data, numClusters):
 def calculateDistanceKpp(centroid, dataPoint):
     array1 = numpy.array(centroid[1][:-1])
     array2 = numpy.array(dataPoint[1][:-1])
-    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    dist = numpy.linalg.norm(array1-array2)
     return dist
 
 def distanceFromCentroids(data, centroids):
@@ -65,7 +65,7 @@ def calculateDistance(centroid, dataPoint):
     list2 = dataPoint[1][:-1]
     array1 = numpy.array(list1)
     array2 = numpy.array(list2)
-    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    dist = numpy.linalg.norm(array1-array2)
     return (dataPoint[0], (centroid[0], dist))
 
 def minDist(row):

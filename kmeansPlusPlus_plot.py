@@ -39,7 +39,7 @@ def initCentroidsKpp(data, numClusters):
 def calculateDistanceKpp(centroid, dataPoint):
     array1 = numpy.array(centroid[1][:-1])
     array2 = numpy.array(dataPoint[1][:-1])
-    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    dist = numpy.linalg.norm(array1-array2)
     return dist
 
 def distanceFromCentroids(data, centroids):
@@ -66,7 +66,7 @@ def calculateDistance(centroid, dataPoint):
     list2 = dataPoint[1][:-1]
     array1 = numpy.array(list1)
     array2 = numpy.array(list2)
-    dist = numpy.sqrt(numpy.sum(array1 - array2)**2)
+    dist = numpy.linalg.norm(array1-array2)
     return (dataPoint[0], (centroid[0], dist))
 
 def minDist(row):
@@ -104,7 +104,7 @@ def plot2DResult(data, centroids):
         values = element[1]
         centroidsX = [values[0]]
         centroidsY = [values[1]]
-        ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o')
+        ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o', linewidths=0.5, edgecolor='black')
 
     fileName = 'iter#' +str(iterations) + '.png'
     fig.savefig(fileName)
@@ -192,9 +192,3 @@ centroids.collect()
 print("Elapsed time: " + str(endTime - startTime))
 print("Number of iterations: " + str(iterations))
 print("Final distance: " + str(intraClusterDistances))
-
-# plotData = dataByCluster.map(lambda (clusterId, data) : custom(clusterId, data)).flatMap(lambda x: x)
-# with open('result.csv','wb') as file:
-  #  for row in plotData.collect():
-    #    file.write(row)
-     #   file.write('\n')
