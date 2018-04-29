@@ -1,4 +1,4 @@
-# spark-submit kmeans.py data/iris_small.dat 4 10
+# spark-submit kmeans.py data/iris_small.dat 3 10
 # imports
 import numpy
 import datetime
@@ -101,7 +101,7 @@ path = sys.argv[1]  # file name of the points
 numClusters = int(sys.argv[2]) # number of clusters
 maxIterations = int(sys.argv[3]) # maximum number of iterations
 
-sc = SparkContext("local", "generator") # spark context
+sc = SparkContext("local", "generator") # spark contextc
 
 data = loadData(path)
 centroids = initCentroids(data, numClusters)
@@ -123,8 +123,6 @@ while iterations != maxIterations:
     
 endTime = datetime.datetime.now()
 
-# centroids.collect()
 print("Elapsed time: " + str(endTime - startTime))
 print("Number of iterations: " + str(iterations))
 print("Final distance: " + str(intraClusterDistances))
-

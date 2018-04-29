@@ -70,7 +70,7 @@ points_value_vector = cluster_normal_values_vector.join(means_cluster).map(lambd
 # print(points_value_vector.collect())
 
 # writing points value in a 1 csv file
-write_into_csv(file_name, points_value_vector);
+# write_into_csv(file_name, points_value_vector);
 
 # saving rdd using saveAsTextFile  
-# points_value_vector.saveAsTextFile(file_name)
+points_value_vector.saveAsTextFile(file_name)

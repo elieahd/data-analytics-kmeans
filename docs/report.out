@@ -1,4 +1,10 @@
-\BOOKMARK [1][-]{section.1}{But du projet}{}% 1
-\BOOKMARK [1][-]{section.2}{Impl\351mentation}{}% 2
-\BOOKMARK [1][-]{section.3}{G\351n\351rateur des donn\351es}{}% 3
-\BOOKMARK [1][-]{section.4}{Performance}{}% 4
+\BOOKMARK [1][-]{section.1}{Travail effectu\351}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Implementation}{section.1}% 2
+\BOOKMARK [3][-]{subsubsection.1.1.1}{Kmeans}{subsection.1.1}% 3
+\BOOKMARK [3][-]{subsubsection.1.1.2}{Generateur}{subsection.1.1}% 4
+\BOOKMARK [3][-]{subsubsection.1.1.3}{Plot}{subsection.1.1}% 5
+\BOOKMARK [2][-]{subsection.1.2}{Simulation}{section.1}% 6
+\BOOKMARK [3][-]{subsubsection.1.2.1}{Kmeans}{subsection.1.2}% 7
+\BOOKMARK [3][-]{subsubsection.1.2.2}{Executions}{subsection.1.2}% 8
+\BOOKMARK [1][-]{section.2}{Analyse}{}% 9
+\BOOKMARK [1][-]{section.3}{Application}{}% 10

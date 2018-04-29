@@ -131,25 +131,24 @@ sc.setLogLevel("ERROR")
 data = loadData(path)
 centroids = initCentroidsKpp(data, numClusters)
 
+counter = 0
+sumIntraClusterDistances = 0;
 
-iterations = 0
-startTime = datetime.datetime.now()
-while iterations != maxIterations:
-    iterations += 1
-    dataMinDistance = assignToCluster(data, centroids)
-    newCentroids = computeCentroids(dataMinDistance)
-    intraClusterDistances = computeIntraClusterDistance(dataMinDistance)
-    print('iter #' + str(iterations) + ': ' + str(intraClusterDistances))
+while(counter != 10):
+    counter += 1
+    iterations = 0
+    while iterations != maxIterations:
+        iterations += 1
+        dataMinDistance = assignToCluster(data, centroids)
+        newCentroids = computeCentroids(dataMinDistance)
+        intraClusterDistances = computeIntraClusterDistance(dataMinDistance)
+        if hasConverged(centroids, newCentroids):
+            break;
+        # To break the lineage and make the algorithm more efficient,
+        # we created a new RDD from the newCentroidsList instead of using the old one.
+        centroids = sc.parallelize(newCentroids.collect())
+    sumIntraClusterDistances += intraClusterDistances
 
-    if hasConverged(centroids, newCentroids):
-        break;
-    # To break the lineage and make the algorithm more efficient,
-    # we created a new RDD from the newCentroidsList instead of using the old one.
-    centroids = sc.parallelize(newCentroids.collect())
-
-endTime = datetime.datetime.now()
-# centroids.collect()
-print("Elapsed time: " + str(endTime - startTime))
-print("Number of iterations: " + str(iterations))
-print("Final distance: " + str(intraClusterDistances))
-    
+meanIntraClusterDistances = sumIntraClusterDistances / counter
+print("meanIntraClusterDistances")
+print(str(meanIntraClusterDistances))

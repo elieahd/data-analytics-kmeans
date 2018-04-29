@@ -1,5 +1,11 @@
 \select@language {french}
-\contentsline {section}{\numberline {1}But du projet}{2}{section.1}
-\contentsline {section}{\numberline {2}Impl\IeC {\'e}mentation}{2}{section.2}
-\contentsline {section}{\numberline {3}G\IeC {\'e}n\IeC {\'e}rateur des donn\IeC {\'e}es}{2}{section.3}
-\contentsline {section}{\numberline {4}Performance}{2}{section.4}
+\contentsline {section}{\numberline {1}Travail effectu\IeC {\'e}}{2}{section.1}
+\contentsline {subsection}{\numberline {1.1}Implementation}{2}{subsection.1.1}
+\contentsline {subsubsection}{\numberline {1.1.1}Kmeans}{2}{subsubsection.1.1.1}
+\contentsline {subsubsection}{\numberline {1.1.2}Generateur}{2}{subsubsection.1.1.2}
+\contentsline {subsubsection}{\numberline {1.1.3}Plot}{4}{subsubsection.1.1.3}
+\contentsline {subsection}{\numberline {1.2}Simulation}{5}{subsection.1.2}
+\contentsline {subsubsection}{\numberline {1.2.1}Kmeans}{5}{subsubsection.1.2.1}
+\contentsline {subsubsection}{\numberline {1.2.2}Executions}{6}{subsubsection.1.2.2}
+\contentsline {section}{\numberline {2}Analyse}{6}{section.2}
+\contentsline {section}{\numberline {3}Application}{6}{section.3}

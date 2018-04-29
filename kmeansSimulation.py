@@ -1,4 +1,4 @@
-# spark-submit kmeansPlusPlus.py data/iris_small.dat 3 10
+# spark-submit kmeans.py data/iris_small.dat 3 10
 # imports
 import numpy
 import datetime
@@ -23,38 +23,13 @@ def loadData(path):
     dataZipped = data.zipWithIndex()
     return dataZipped.map(lambda x: customSplit(x))
 
-def initCentroidsKpp(data, numClusters):
-    centroids = data.takeSample(False, 1)
-    dataArray = data.collect()
-    while len(centroids) < numClusters:
-        D2 = distanceFromCentroids(dataArray, centroids)
-        centroids.append(chooseNextCentroid(D2, dataArray))
-    centroids = sc.parallelize(centroids)
-    centroids = centroids.map(lambda (index, data): data[:-1])
-    centroids = centroids.zipWithIndex()
-    centroids = centroids.map(lambda (data, index): (index, data))
-    return centroids
+# random is not efficient check file kmeansPlusPlus.py
+def initCentroids(data, numClusters):
+    sample = sc.parallelize(data.takeSample(False, numClusters))
+    centroids = sample.map(lambda point : point[1][:-1])
+    return centroids.zipWithIndex().map(lambda point : (point[1], point[0]))
 
-def calculateDistanceKpp(centroid, dataPoint):
-    array1 = numpy.array(centroid[1][:-1])
-    array2 = numpy.array(dataPoint[1][:-1])
-    dist = numpy.linalg.norm(array1-array2)
-    return dist
-
-def distanceFromCentroids(data, centroids):
-    D2 = numpy.array([min([calculateDistanceKpp(centroid, dataPoint) for centroid in centroids]) for dataPoint in data])
-    return D2
-
-def chooseNextCentroid(D2, dataArray):
-    D2 = numpy.array(D2)
-    probabilities = D2/D2.sum()
-    cumprobs = probabilities.cumsum()
-    randomValue = random.random()
-    centroidIndex = numpy.where(cumprobs >= randomValue)[0][0]
-    centroid = dataArray[centroidIndex]
-    return(centroid)
-
-def assignToCluster(data, centroids):
+def assignToCluster(data, centroids): 
     cartesianData = centroids.cartesian(data)
     cartesianDataDistances = cartesianData.map(lambda (centroid, dataPoint): calculateDistance(centroid, dataPoint))
     dataMinDistance = cartesianDataDistances.groupByKey().map(lambda x: (x[0], list(x[1]))).map(lambda row: minDist(row))
@@ -86,7 +61,7 @@ def minDist(row):
 def computeCentroids(dataMinDistance):
     dataByCluster = dataMinDistance.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
     dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
-    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems))
+    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems))    
     return newCentroids
 
 def reCalculating(iCentroid, clusterItems):
@@ -113,11 +88,12 @@ def computeIntraClusterDistance(data):
     return result
 
 if len(sys.argv) != 4:
-    print("3 arguments are needed:")
+    print("4 arguments are needed :")
+    print(" * name of the file containing the code kmeans.py")
     print(" * name of the file containing the points e.g. data/iris_small.dat")
     print(" * number of clusters e.g. 4")
     print(" * max number of iterations e.g. 10\n")
-    print("Try executing the following command: spark-submit kmeansPlusPlus.py data/iris_clustering.dat 3 20")
+    print("Try executing the following command : spark-submit kmeans.py data/iris_small.dat 4 10")
     exit(0)
 
 # inputs
@@ -125,31 +101,30 @@ path = sys.argv[1]  # file name of the points
 numClusters = int(sys.argv[2]) # number of clusters
 maxIterations = int(sys.argv[3]) # maximum number of iterations
 
-sc = SparkContext("local", "generator") # spark context
-sc.setLogLevel("ERROR")
+sc = SparkContext("local", "generator") # spark contextc
 
-data = loadData(path)
-centroids = initCentroidsKpp(data, numClusters)
+counter = 0
+sumIntraClusterDistances = 0;
+while(counter != 100):
+    counter += 1
+    data = loadData(path)
+    centroids = initCentroids(data, numClusters)
 
+    iterations = 0
+    while iterations != maxIterations:
+        iterations += 1
+        dataMinDistance = assignToCluster(data, centroids)
+        newCentroids = computeCentroids(dataMinDistance)
+        intraClusterDistances = computeIntraClusterDistance(dataMinDistance)
+        # print('iter #' + str(iterations) + ': ' + str(intraClusterDistances))
 
-iterations = 0
-startTime = datetime.datetime.now()
-while iterations != maxIterations:
-    iterations += 1
-    dataMinDistance = assignToCluster(data, centroids)
-    newCentroids = computeCentroids(dataMinDistance)
-    intraClusterDistances = computeIntraClusterDistance(dataMinDistance)
-    print('iter #' + str(iterations) + ': ' + str(intraClusterDistances))
+        if hasConverged(centroids, newCentroids):
+            break;
+        # To break the lineage and make the algorithm more efficient,
+        # we created a new RDD from the newCentroidsList instead of using the old one.
+        centroids = sc.parallelize(newCentroids.collect())
+    sumIntraClusterDistances += intraClusterDistances
 
-    if hasConverged(centroids, newCentroids):
-        break;
-    # To break the lineage and make the algorithm more efficient,
-    # we created a new RDD from the newCentroidsList instead of using the old one.
-    centroids = sc.parallelize(newCentroids.collect())
-
-endTime = datetime.datetime.now()
-# centroids.collect()
-print("Elapsed time: " + str(endTime - startTime))
-print("Number of iterations: " + str(iterations))
-print("Final distance: " + str(intraClusterDistances))
-    
+meanIntraClusterDistances = sumIntraClusterDistances / counter
+print("meanIntraClusterDistances")
+print(str(meanIntraClusterDistances))
