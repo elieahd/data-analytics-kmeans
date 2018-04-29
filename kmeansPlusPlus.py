@@ -7,7 +7,6 @@ import sys
 
 from pyspark.mllib.random import RandomRDDs
 from pyspark import SparkContext
-import matplotlib.pyplot as plt
 
 # methods
 def customSplit(row):
