@@ -315,6 +315,13 @@ Ci-dessus vous pouvez voire la progression et les résultats de chaque itératio
 \end{subfigure}%
 \end{figure}
 
+\begin{itemize}
+\item Temps d'exécution : 4 min 20 sec
+\item Iitérations: 15
+\item Distance: 1.259
+\end{itemize}
+
+
 \newpage
 \subsubsection{Resultat plot - Petal}
 Ci-dessus vous pouvez voire la progression et les résultats de chaque itération sur l'execution de l'algorithm KMeans sur les données iris clustering avec seulement les 2 coordonnées  de sepal : petal width en cm et petal height en 
@@ -376,6 +383,13 @@ Ci-dessus vous pouvez voire la progression et les résultats de chaque itératio
 \end{subfigure}%
 \end{figure}
 
+
+\begin{itemize}
+\item Temps d'exécution : 2 min 20 sec
+\item Iitérations: 8
+\item Distance: 1.1143
+\end{itemize}
+
 \newpage
 \section{Analyse}
 \subsection{Distance intra-cluster}
@@ -400,23 +414,57 @@ K-means avec une initialisation aléatoire des centres converge en 7 iterations,
             \hline
            KMeans ++- implémenté & $9.5$ s & $6.35$ & $2.41$  \\
             \hline      
-           KMeans & $10.25$ & $6.75$ & $2.41$  \\
-            \hline
         \end{tabular}
         \end{center}
     \end{table}
 
 \section{Application}
+Afin de tester sur plus de données, nous avons créer notre propre données. Nous avons collecté la taille ainsi que le poid de 92 jours de Basket de la NBA et leur position represente leurs cluster. (voire dans le repertoire data : nba.csv).
+
+Donc notre but c'est de voir si c'est 2 coordonnées : taille (m) et poid (kg) on une forte relation avec la position des joueurs.
+
+Donc en exécutant l'algorithme on obtient les resultat suivantes : 
+\begin{itemize}
+\item Temps d'exécution : 48 sec
+\item Iitérations: 2
+\item Distance: 14.9
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{img/nba-iter1.png}
+\caption{Iteration 1}
+\end{figure}
+\newpage
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{img/nba-iter2.png}
+\caption{Iteration 2}
+\end{figure}
+
+On remarque ici que les données sont assez répartis:
+\begin{itemize}
+\item les joueurs qui ont un petit poid et une petit taille sont regroupé (Guards)
+\item les joueurs qui ont un moyen poid et une moyenne taille sont regroupé (Forwards)
+\item les joueurs qui ont un grand poin et une grande taille sont regroupé (Center)
+\end{itemize} 
 
 \newpage
+
 \begin{thebibliography}{5}
     \bibitem{MonteCarloKakuro} 
-    T.~Cazenave. {\em Monte-Carlo Kakuro}
+    KMeans ++ in python   [Online]. \\ Disponible:  \url{https://datasciencelab.wordpress.com/2014/01/15/improved-seeding-for-clustering-with-k-means/}
    \bibitem{WikiKakuro} 
-   Wikipedia page on {\em Kakuro}. [Online]. \\ Available:  \url{ https://en.wikipedia.org/wiki/Kakuro}
-   \bibitem{WikiCSP} 
-   Wikipedia page on {\em CSP }. [Online]. \\ Available:  \url{https://en.wikipedia.org/wiki/Constraint_satisfaction_problem}
-   \bibitem{WikiBacktracking} 
-   Wikipedia page on {\em Backtracking algorithm}. [Online]. \\ Available:  \url{https://en.wikipedia.org/wiki/Look-ahead_(backtracking)}
+   Donnée de test sur Archive ICS UCI. [Online]. \\ Disponible:  \url{ https://archive.ics.uci.edu/ml/machine-learning-databases/soybean/soybean-small.data}
+   \bibitem{bla} 
+   Initialization of k means clustering [Online]. \\ Disponible:  \url{https://www.coursera.org/learn/cluster-analysis/lecture/bPyBl/3-3-initialization-of-k-means-clustering}
+   \bibitem{test1} 
+   K-means clustering: how it works [Online]. \\ Disponible:  \url{ https://www.youtube.com/watch?v=_aWzGGNrcic}
+   \bibitem{test2} 
+   Scalable K Means++ . [Online]. \\ Disponible:  \url{ https://www.youtube.com/watch?v=KHu8uNy4pV8&t=924s}
+
+
+
 \end{thebibliography}
 \end{document}
