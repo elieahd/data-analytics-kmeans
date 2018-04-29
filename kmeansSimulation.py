@@ -105,7 +105,7 @@ sc = SparkContext("local", "generator") # spark contextc
 
 counter = 0
 sumIntraClusterDistances = 0;
-while(counter != 100):
+while(counter != 5):
     counter += 1
     data = loadData(path)
     centroids = initCentroids(data, numClusters)

@@ -87,7 +87,7 @@ def plot2DResult(data, centroids):
         centroidsY = [values[1]]
         ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o', linewidths=0.5, edgecolor='black')
     
-    fileName = 'iter#' +str(iterations)
+    fileName = 'iter2-' +str(iterations)
     ax.set_title(fileName)
     fig.savefig(fileName +  '.png') 
 
