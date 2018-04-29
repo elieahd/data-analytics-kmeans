@@ -1,2 +1,5 @@
-\select@language {english}
-\contentsline {section}{\numberline {1}Project goal}{2}{section.1}
+\select@language {french}
+\contentsline {section}{\numberline {1}But du projet}{2}{section.1}
+\contentsline {section}{\numberline {2}Impl\IeC {\'e}mentation}{2}{section.2}
+\contentsline {section}{\numberline {3}G\IeC {\'e}n\IeC {\'e}rateur des donn\IeC {\'e}es}{2}{section.3}
+\contentsline {section}{\numberline {4}Performance}{2}{section.4}

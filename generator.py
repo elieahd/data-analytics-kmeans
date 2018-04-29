@@ -70,7 +70,7 @@ points_value_vector = cluster_normal_values_vector.join(means_cluster).map(lambd
 noise_points_vector = sc.parallelize(range(0, noise_points)).map(lambda x : random.sample(numpy.arange(MIN_MEAN_VALUE, MAX_MEAN_VALUE, STEPS), dimension))
 noise_points_vector = noise_points_vector.map(lambda row : str(row).replace("[", "").replace("]",""))
 
-# saving points generated into a file
+# writing points value in a 1 csv file
 write_into_csv(file_name, points_value_vector);
 
 # saving noise points generated into a file

@@ -24,7 +24,12 @@ def loadData(path):
     dataZipped = data.zipWithIndex()
     return dataZipped.map(lambda x: customSplit(x))
 
-# random is not efficient check file kmeansplusplus.py
+#Random is not efficient!
+def initCentroidsRandom(data, numClusters):
+    sample = sc.parallelize(data.takeSample(False, numClusters))
+    centroids = sample.map(lambda point : point[1][:-1])
+    return centroids.zipWithIndex().map(lambda point : (point[1], point[0]))
+
 def initCentroids(data, numClusters):
     sample = sc.parallelize(data.takeSample(False, numClusters))
     centroids = sample.map(lambda point : point[1][:-1])
@@ -59,10 +64,49 @@ def minDist(row):
             minPoint = (minCentroidIndex, minValue)
     return (index, minPoint)
 
-def computeCentroids(dataMinDistance):
+def plot2DResult(data, centroids):
+    colors = ['r', 'b', 'g', 'c', 'm']
+    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
+    for element in data:
+        cluster = element[0]
+        values = element[1]
+        pointsX = []
+        pointsY = []
+        for value in values:
+            pointsValues = value[0]
+            distance = value[1]
+            pointsX.append(pointsValues[0])
+            pointsY.append(pointsValues[1])
+        ax.scatter(pointsX, pointsY, color=colors[cluster], marker='+')
+        
+    for element in centroids:
+        cluster = element[0]
+        values = element[1]
+        centroidsX = [values[0]]
+        centroidsY = [values[1]]
+        ax.scatter(centroidsX, centroidsY, color=colors[cluster], marker='o')
+        
+    fileName = 'iter#' +str(iterations) + '.png'  
+    fig.savefig(fileName) 
+
+
+def test1():    
+    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
+    ax.scatter([0.3, 1.2, 2.5, 3.8], [40, 30, 20, 10], color='darkgreen', marker='^')
+    fig.savefig('bla.png')  
+
+def test2():    
+    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
+    ax.scatter([0.3, 1.2, 2.5, 3.8], [10, 20, 30, 40], color='darkgreen', marker='^')
+    fig.savefig('bla-bla.png') 
+
+    #plt.close(fig)
+
+def computeCentroids(dataMinDistance, oldCentroids):
     dataByCluster = dataMinDistance.join(data).map(lambda (iPoint, ((iCentroid, dist), data)): (iCentroid, (data, dist)))
     dataByCluster = dataByCluster.groupByKey().map(lambda (key, resultIterator): (key, list(resultIterator)))
-    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems))    
+    newCentroids = dataByCluster.map(lambda (iCentroid, clusterItems): reCalculating(iCentroid, clusterItems)) 
+    plot2DResult(dataByCluster.collect(), oldCentroids.collect())   
     return newCentroids
 
 def reCalculating(iCentroid, clusterItems):
@@ -111,7 +155,7 @@ startTime = datetime.datetime.now()
 while iterations != maxIterations:
     iterations += 1
     dataMinDistance = assignToCluster(data, centroids)
-    newCentroids = computeCentroids(dataMinDistance)
+    newCentroids = computeCentroids(dataMinDistance, centroids)
     intraClusterDistances = computeIntraClusterDistance(dataMinDistance)
     print('iter #' + str(iterations) + ': ' + str(intraClusterDistances))
 
@@ -123,7 +167,13 @@ while iterations != maxIterations:
     
 endTime = datetime.datetime.now()
 
-# centroids.collect()
+centroids.collect()
 print("Elapsed time: " + str(endTime - startTime))
 print("Number of iterations: " + str(iterations))
 print("Final distance: " + str(intraClusterDistances))
+
+# plotData = dataByCluster.map(lambda (clusterId, data) : custom(clusterId, data)).flatMap(lambda x: x)
+# with open('result.csv','wb') as file:
+  #  for row in plotData.collect():
+    #    file.write(row)
+     #   file.write('\n')
